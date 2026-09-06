@@ -1,3 +1,4 @@
+import { normalizeName } from './normalize'
 import type { PreparedImage } from './image'
 import type { Receipt, ReceiptItem } from '../types'
 
@@ -22,6 +23,9 @@ const SYSTEM_PROMPT = `あなたは日本のレシート画像を読み取って
 - 値引きが無い商品は original_price を null にする。
 - 数量がまとまった行（例: 「ﾄﾏﾄ 2点 @128 256」）は、その行の支払額 256 を price とする。
 - 感熱紙の掠れで読めない文字は推測せず、読めた範囲の文字列をそのまま name に入れる。
+- 軽減税率などの注記記号は name に含めない。商品名の前後に付く \`*\` \`＊\` \`※\` \`⑧\` や
+  \`(軽)\` \`(内)\` \`(外)\` は落とす。ただし \`ﾎﾟﾃﾄ*2\` のような数量の掛け算表記は残す。
+- 半角カタカナは全角カタカナに直す（\`ﾄﾞﾚｯｼﾝｸﾞ\` ではなく \`ドレッシング\`）。
 - date が読み取れない場合は空文字にする。store も同様。
 - 商品の並び順はレシートの記載順のままでよい。並べ替えはしない。`
 
@@ -185,7 +189,7 @@ function parseReceipt(text: string): Receipt {
   const items: ReceiptItem[] = Array.isArray(value.items)
     ? value.items
         .map((item) => ({
-          name: String(item?.name ?? '').trim(),
+          name: normalizeName(item?.name),
           price: toInt(item?.price),
           original_price: item?.original_price == null ? null : toInt(item.original_price),
         }))
@@ -193,7 +197,7 @@ function parseReceipt(text: string): Receipt {
     : []
 
   return {
-    store: typeof value.store === 'string' ? value.store : '',
+    store: normalizeName(value.store),
     date: typeof value.date === 'string' ? value.date : '',
     total: toInt(value.total),
     items,
