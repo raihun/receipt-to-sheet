@@ -1,4 +1,11 @@
 import { useMemo, useState } from 'react'
+import {
+  CATEGORIES,
+  DEFAULT_CATEGORY,
+  defaultSubCategory,
+  subCategoriesOf,
+} from '../lib/categories'
+import type { Category } from '../lib/categories'
 import type { Receipt } from '../types'
 
 type Row = { name: string; price: string; originalPrice: number | null }
@@ -8,7 +15,14 @@ type Props = {
   previewUrl: string
   submitting: boolean
   error: string | null
-  onSubmit: (result: { date: string; store: string; total: number; top5: string[] }) => void
+  onSubmit: (result: {
+    date: string
+    store: string
+    total: number
+    category: string
+    subCategory: string
+    top5: string
+  }) => void
   onRetake: () => void
 }
 
@@ -23,6 +37,10 @@ export function ConfirmScreen({
   const [store, setStore] = useState(receipt.store)
   const [date, setDate] = useState(receipt.date)
   const [total, setTotal] = useState(String(receipt.total))
+  const [category, setCategory] = useState<Category>(DEFAULT_CATEGORY)
+  const [subCategory, setSubCategory] = useState(defaultSubCategory(DEFAULT_CATEGORY))
+  // 備考欄に入る文字列。null なら商品行から自動生成した値を使う
+  const [note, setNote] = useState<string | null>(null)
   const [rows, setRows] = useState<Row[]>(() =>
     receipt.items.map((item) => ({
       name: item.name,
@@ -41,6 +59,9 @@ export function ConfirmScreen({
         .slice(0, 5),
     [rows],
   )
+
+  const autoNote = formatTop5(top5)
+  const noteValue = note ?? autoNote
 
   const updateRow = (index: number, patch: Partial<Row>) => {
     setRows((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)))
@@ -73,9 +94,47 @@ export function ConfirmScreen({
       </div>
 
       <label className="field">
-        <span>店名</span>
+        <span>支払先</span>
         <input value={store} onChange={(e) => setStore(e.target.value)} />
       </label>
+
+      <div className="row">
+        <label className="field">
+          <span>費目</span>
+          <select
+            value={category}
+            onChange={(e) => {
+              const next = e.target.value as Category
+              setCategory(next)
+              setSubCategory(defaultSubCategory(next))
+            }}
+          >
+            {CATEGORIES.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="field">
+          <span>小項目</span>
+          <select
+            value={subCategory}
+            disabled={subCategoriesOf(category).length === 0}
+            onChange={(e) => setSubCategory(e.target.value)}
+          >
+            {subCategoriesOf(category).length === 0 ? (
+              <option value="">（なし）</option>
+            ) : (
+              subCategoriesOf(category).map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))
+            )}
+          </select>
+        </label>
+      </div>
 
       {sumOfItems !== totalValue && (
         <p className="note">
@@ -138,6 +197,15 @@ export function ConfirmScreen({
         ))}
         {top5.length === 0 && <li className="note">商品がありません</li>}
       </ol>
+      <label className="field">
+        <span>備考欄に入る文字列</span>
+        <textarea rows={3} value={noteValue} onChange={(e) => setNote(e.target.value)} />
+      </label>
+      {note !== null && note !== autoNote && (
+        <button className="link left" onClick={() => setNote(null)}>
+          商品行から作り直す
+        </button>
+      )}
 
       <button
         className="primary"
@@ -147,7 +215,9 @@ export function ConfirmScreen({
             date,
             store: store.trim(),
             total: totalValue,
-            top5: top5.map((item) => item.name),
+            category,
+            subCategory,
+            top5: noteValue,
           })
         }
       >
@@ -158,6 +228,11 @@ export function ConfirmScreen({
       </button>
     </div>
   )
+}
+
+/** `商品名 1,234円` をカンマで連ねた1つの文字列にする。スプレッドシートでは1セルに入る */
+function formatTop5(items: { name: string; price: number }[]): string {
+  return items.map((item) => `${item.name} ${item.price.toLocaleString()}円`).join(', ')
 }
 
 function toNumber(value: string): number {

@@ -92,7 +92,14 @@ export function App() {
   }, [image, settings.apiKey, settings.model])
 
   const handleSubmit = useCallback(
-    async (result: { date: string; store: string; total: number; top5: string[] }) => {
+    async (result: {
+      date: string
+      store: string
+      total: number
+      category: string
+      subCategory: string
+      top5: string
+    }) => {
       setSubmitting(true)
       setError(null)
       try {

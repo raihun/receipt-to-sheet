@@ -25,12 +25,19 @@ export type Settings = {
   maxEdge: number
 }
 
-/** GAS に送る本体。列構成は未決定なので、必要になりそうな値を素直に並べている */
+/** GAS に送る本体。1件が1行になる。列の割り当ては gas/Code.gs の buildRow */
 export type SheetPayload = {
   passphrase: string
+  /** A列。YYYY-MM-DD */
   date: string
-  store: string
+  /** B列 */
   total: number
-  /** 値引き後金額の降順トップ5。商品名の文字列リスト */
-  top5: string[]
+  /** C列。食費 / 日用品 / 特別費 */
+  category: string
+  /** D列。食費のときだけ 内食 / 中食 / 外食。それ以外は空文字 */
+  subCategory: string
+  /** E列 */
+  store: string
+  /** F列（備考）。例: `ｻｹ 798円, ﾌﾞﾀﾊﾞﾗ 682円` */
+  top5: string
 }
