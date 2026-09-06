@@ -1,6 +1,6 @@
 # レシート入力PWA
 
-レシートを撮影し、Claude API で解析して、確認画面を経て Google スプレッドシートに追記する。
+レシートを撮影し、Gemini API で解析して、確認画面を経て Google スプレッドシートに追記する。
 仕様は [CLAUDE.md](./CLAUDE.md) を参照。
 
 ## 開発（Docker のみ。ホストに Node は不要）
@@ -12,6 +12,10 @@ docker compose down
 
 `node_modules` は名前付きボリュームに置いているので、ホストのリポジトリには生えない。
 依存を追加するときもコンテナ内で実行する。
+
+そのため**ホストのエディタからは型が解決できず、赤波線が出る**（コードは正しい。
+コンテナ内の `tsc -b` はエラー0）。VSCode で補完を効かせたい場合は Dev Containers 拡張で
+`.devcontainer/devcontainer.json` を使ってコンテナ内で開く。
 
 ```sh
 docker compose run --rm --no-deps app npm install <package>

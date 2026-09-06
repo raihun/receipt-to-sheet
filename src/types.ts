@@ -15,13 +15,29 @@ export type Receipt = {
   items: ReceiptItem[]
 }
 
-export type Settings = {
+/**
+ * 送信先。Googleアカウントとスプレッドシートの組ごとに1つ持つ
+ * （家族共用と個人用など）。
+ *
+ * APIキーも送信先ごとに持たせている。同じキーを両方に入れてもよいが、
+ * アカウントごとにキーを分けると無料枠を分散できる。
+ */
+export type Destination = {
+  id: string
+  /** 画面に出す名前。「家族共用」「個人」など */
+  name: string
   apiKey: string
   gasUrl: string
   passphrase: string
-  /** 空文字なら DEFAULT_MODEL を使う */
+}
+
+export type Settings = {
+  destinations: Destination[]
+  /** 選択中の送信先のid */
+  selectedId: string
+  /** 空文字なら DEFAULT_MODEL を使う。送信先によらず共通 */
   model: string
-  /** 送信する画像の長辺ピクセル数 */
+  /** 送信する画像の長辺ピクセル数。送信先によらず共通 */
   maxEdge: number
 }
 

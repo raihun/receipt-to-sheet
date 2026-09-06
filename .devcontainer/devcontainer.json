@@ -1,0 +1,9 @@
+{
+  "name": "receipt-to-sheet",
+  "dockerComposeFile": "../compose.yaml",
+  "service": "app",
+  "workspaceFolder": "/app",
+  // node_modules は名前付きボリュームにあるので、ホストのVSCodeからは見えない。
+  // コンテナ内で開くことで型解決と補完が効くようになる。
+  "shutdownAction": "stopCompose"
+}

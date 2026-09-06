@@ -6,16 +6,21 @@ import {
   subCategoriesOf,
 } from '../lib/categories'
 import type { Category } from '../lib/categories'
-import type { Receipt } from '../types'
+import type { Destination, Receipt } from '../types'
 
 type Row = { name: string; price: string; originalPrice: number | null }
 
 type Props = {
   receipt: Receipt
-  previewUrl: string
+  destinations: Destination[]
+  selectedId: string
+  previewUrl: string | null
+  /** どこから来たか。戻り先の文言と行き先が変わる */
+  origin: 'capture' | 'history'
   submitting: boolean
   error: string | null
   onSubmit: (result: {
+    destinationId: string
     date: string
     store: string
     total: number
@@ -23,22 +28,27 @@ type Props = {
     subCategory: string
     top5: string
   }) => void
-  onRetake: () => void
+  onBack: () => void
 }
 
 export function ConfirmScreen({
   receipt,
+  destinations,
+  selectedId,
   previewUrl,
+  origin,
   submitting,
   error,
   onSubmit,
-  onRetake,
+  onBack,
 }: Props) {
   const [store, setStore] = useState(receipt.store)
   const [date, setDate] = useState(receipt.date)
   const [total, setTotal] = useState(String(receipt.total))
   // 送信直前の確認ダイアログ。費目と小項目はここで選ばせる（画面上部だと見落とすため）
   const [confirming, setConfirming] = useState(false)
+  // 送信先はここで選ばせる。家族共用と個人を取り違えると費目の間違いより厄介なので
+  const [destinationId, setDestinationId] = useState(selectedId)
   const [category, setCategory] = useState<Category>(DEFAULT_CATEGORY)
   const [subCategory, setSubCategory] = useState(defaultSubCategory(DEFAULT_CATEGORY))
   // 備考欄に入る文字列。null なら商品行から自動生成した値を使う
@@ -72,12 +82,21 @@ export function ConfirmScreen({
   const totalValue = toNumber(total)
   const sumOfItems = rows.reduce((acc, row) => acc + toNumber(row.price), 0)
 
+  const backLabel = origin === 'history' ? '履歴に戻る' : '撮り直す'
+
   return (
     <div className="screen">
+      <div className="topbar">
+        <button className="link left" onClick={onBack}>
+          ← {backLabel}
+        </button>
+      </div>
       <h1>確認</h1>
       {error !== null && <p className="error">{error}</p>}
 
-      <img className="preview" src={previewUrl} alt="撮影したレシート" />
+      {previewUrl !== null && (
+        <img className="preview" src={previewUrl} alt="撮影したレシート" />
+      )}
 
       <div className="row">
         <label className="field">
@@ -174,8 +193,8 @@ export function ConfirmScreen({
       <button className="primary" onClick={() => setConfirming(true)}>
         スプレッドシートに追記
       </button>
-      <button className="ghost" disabled={submitting} onClick={onRetake}>
-        撮り直す
+      <button className="ghost" disabled={submitting} onClick={onBack}>
+        {backLabel}
       </button>
 
       {confirming && (
@@ -183,6 +202,17 @@ export function ConfirmScreen({
           <div className="sheet">
             <h2 className="sheet-title">この内容で追記します</h2>
             {error !== null && <p className="error">{error}</p>}
+
+            <label className="field">
+              <span>送信先</span>
+              <select value={destinationId} onChange={(e) => setDestinationId(e.target.value)}>
+                {destinations.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name === '' ? '（名前なし）' : d.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
             <div className="row">
               <label className="field">
@@ -246,6 +276,7 @@ export function ConfirmScreen({
               disabled={submitting}
               onClick={() =>
                 onSubmit({
+                  destinationId,
                   date,
                   store: store.trim(),
                   total: totalValue,
@@ -255,7 +286,11 @@ export function ConfirmScreen({
                 })
               }
             >
-              {submitting ? '送信中…' : `${category}${subCategory === '' ? '' : ' / ' + subCategory} で追記する`}
+              {submitting
+                ? '送信中…'
+                : `${destinationName(destinations, destinationId)} に ${category}${
+                    subCategory === '' ? '' : ' / ' + subCategory
+                  } で追記`}
             </button>
             <button className="ghost" disabled={submitting} onClick={() => setConfirming(false)}>
               戻る
@@ -265,6 +300,12 @@ export function ConfirmScreen({
       )}
     </div>
   )
+}
+
+function destinationName(destinations: Destination[], id: string): string {
+  const found = destinations.find((d) => d.id === id)
+  if (found === undefined) return '送信先'
+  return found.name === '' ? '（名前なし）' : found.name
 }
 
 /** `商品名 1,234円` をカンマで連ねた1つの文字列にする。スプレッドシートでは1セルに入る */
