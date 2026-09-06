@@ -1,0 +1,296 @@
+:root {
+  --bg: #111614;
+  --panel: #1b2220;
+  --line: #2e3835;
+  --text: #eef2f0;
+  --muted: #9aa5a0;
+  --accent: #2f9c68;
+  --danger: #e0605a;
+
+  color-scheme: dark;
+  font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-text-size-adjust: 100%;
+}
+
+.screen {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: max(16px, env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.screen.center {
+  min-height: 100vh;
+  min-height: 100dvh;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+h1 {
+  font-size: 22px;
+  margin: 4px 0;
+}
+
+h2 {
+  font-size: 16px;
+  margin: 12px 0 0;
+  color: var(--muted);
+}
+
+.note {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.error {
+  /* API のエラー本文をそのまま出すので改行と折り返しを許す */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: rgba(224, 96, 90, 0.12);
+  border: 1px solid var(--danger);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  margin: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.field > span {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.row {
+  display: flex;
+  gap: 12px;
+}
+
+input {
+  width: 100%;
+  /* iOS で focus 時に画面が拡大するのを防ぐため 16px 以上を保つ */
+  font-size: 16px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text);
+}
+
+input:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+button {
+  font-size: 16px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.45;
+}
+
+button.primary {
+  background: var(--accent);
+  color: #08120d;
+  font-weight: 600;
+}
+
+button.ghost {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--muted);
+}
+
+button.danger {
+  background: transparent;
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+button.icon {
+  padding: 8px 12px;
+  color: var(--muted);
+  border-color: var(--line);
+}
+
+.hidden-input {
+  display: none;
+}
+
+.preview {
+  width: 100%;
+  max-height: 240px;
+  object-fit: contain;
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+table.items {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table.items td {
+  padding: 4px 4px 4px 0;
+  vertical-align: middle;
+}
+
+table.items td.price-cell {
+  width: 130px;
+  white-space: nowrap;
+}
+
+table.items td.price-cell input {
+  text-align: right;
+}
+
+.struck {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  text-decoration: line-through;
+  text-align: right;
+  padding-top: 2px;
+}
+
+ol.top5 {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  counter-reset: rank;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* flex な li ではマーカーが描かれないので counter で自前に出す */
+ol.top5 li {
+  display: flex;
+  gap: 10px;
+  font-size: 15px;
+}
+
+ol.top5 li:not(.note)::before {
+  content: counter(rank) '.';
+  counter-increment: rank;
+  color: var(--muted);
+  min-width: 1.2em;
+}
+
+ol.top5 li > span:first-of-type {
+  flex: 1;
+}
+
+ol.top5 .amount {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--line);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.check {
+  font-size: 48px;
+  color: var(--accent);
+}
+
+/* --- プレビュー画面 --- */
+
+.zoom-frame {
+  /* 等倍表示。枠内スクロールで端まで確認する。
+     viewport で user-scalable=no にしているため、ピンチ拡大の代わりがこれになる */
+  overflow: auto;
+  max-height: 55vh;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #000;
+  -webkit-overflow-scrolling: touch;
+}
+
+.zoom-frame img {
+  display: block;
+  max-width: none;
+}
+
+.zoom-frame.fit img {
+  width: 100%;
+  height: auto;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+button.link {
+  margin-left: auto;
+  padding: 4px 0;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 13px;
+}
+
+.seg {
+  display: flex;
+  gap: 8px;
+}
+
+.seg-item {
+  flex: 1;
+  padding: 12px 4px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.seg-item.active {
+  border-color: var(--accent);
+  background: rgba(47, 156, 104, 0.16);
+  color: var(--text);
+  font-weight: 600;
+}
