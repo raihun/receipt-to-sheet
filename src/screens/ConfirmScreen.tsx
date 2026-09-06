@@ -37,6 +37,8 @@ export function ConfirmScreen({
   const [store, setStore] = useState(receipt.store)
   const [date, setDate] = useState(receipt.date)
   const [total, setTotal] = useState(String(receipt.total))
+  // 送信直前の確認ダイアログ。費目と小項目はここで選ばせる（画面上部だと見落とすため）
+  const [confirming, setConfirming] = useState(false)
   const [category, setCategory] = useState<Category>(DEFAULT_CATEGORY)
   const [subCategory, setSubCategory] = useState(defaultSubCategory(DEFAULT_CATEGORY))
   // 備考欄に入る文字列。null なら商品行から自動生成した値を使う
@@ -97,44 +99,6 @@ export function ConfirmScreen({
         <span>支払先</span>
         <input value={store} onChange={(e) => setStore(e.target.value)} />
       </label>
-
-      <div className="row">
-        <label className="field">
-          <span>費目</span>
-          <select
-            value={category}
-            onChange={(e) => {
-              const next = e.target.value as Category
-              setCategory(next)
-              setSubCategory(defaultSubCategory(next))
-            }}
-          >
-            {CATEGORIES.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="field">
-          <span>小項目</span>
-          <select
-            value={subCategory}
-            disabled={subCategoriesOf(category).length === 0}
-            onChange={(e) => setSubCategory(e.target.value)}
-          >
-            {subCategoriesOf(category).length === 0 ? (
-              <option value="">（なし）</option>
-            ) : (
-              subCategoriesOf(category).map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))
-            )}
-          </select>
-        </label>
-      </div>
 
       {sumOfItems !== totalValue && (
         <p className="note">
@@ -207,25 +171,98 @@ export function ConfirmScreen({
         </button>
       )}
 
-      <button
-        className="primary"
-        disabled={submitting}
-        onClick={() =>
-          onSubmit({
-            date,
-            store: store.trim(),
-            total: totalValue,
-            category,
-            subCategory,
-            top5: noteValue,
-          })
-        }
-      >
-        {submitting ? '送信中…' : 'スプレッドシートに追記'}
+      <button className="primary" onClick={() => setConfirming(true)}>
+        スプレッドシートに追記
       </button>
       <button className="ghost" disabled={submitting} onClick={onRetake}>
         撮り直す
       </button>
+
+      {confirming && (
+        <div className="overlay" role="dialog" aria-modal="true" aria-label="追記の確認">
+          <div className="sheet">
+            <h2 className="sheet-title">この内容で追記します</h2>
+            {error !== null && <p className="error">{error}</p>}
+
+            <div className="row">
+              <label className="field">
+                <span>費目</span>
+                <select
+                  value={category}
+                  onChange={(e) => {
+                    const next = e.target.value as Category
+                    setCategory(next)
+                    setSubCategory(defaultSubCategory(next))
+                  }}
+                >
+                  {CATEGORIES.map((item) => (
+                    <option key={item} value={item}>
+                      {item}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                <span>小項目</span>
+                <select
+                  value={subCategory}
+                  disabled={subCategoriesOf(category).length === 0}
+                  onChange={(e) => setSubCategory(e.target.value)}
+                >
+                  {subCategoriesOf(category).length === 0 ? (
+                    <option value="">（なし）</option>
+                  ) : (
+                    subCategoriesOf(category).map((item) => (
+                      <option key={item} value={item}>
+                        {item}
+                      </option>
+                    ))
+                  )}
+                </select>
+              </label>
+            </div>
+
+            <dl className="summary">
+              <div>
+                <dt>日付</dt>
+                <dd>{date === '' ? '（未入力）' : date}</dd>
+              </div>
+              <div>
+                <dt>金額</dt>
+                <dd>¥{totalValue.toLocaleString()}</dd>
+              </div>
+              <div>
+                <dt>支払先</dt>
+                <dd>{store.trim() === '' ? '（未入力）' : store.trim()}</dd>
+              </div>
+              <div>
+                <dt>備考</dt>
+                <dd className="wrap">{noteValue === '' ? '（なし）' : noteValue}</dd>
+              </div>
+            </dl>
+
+            <button
+              className="primary"
+              disabled={submitting}
+              onClick={() =>
+                onSubmit({
+                  date,
+                  store: store.trim(),
+                  total: totalValue,
+                  category,
+                  subCategory,
+                  top5: noteValue,
+                })
+              }
+            >
+              {submitting ? '送信中…' : `${category}${subCategory === '' ? '' : ' / ' + subCategory} で追記する`}
+            </button>
+            <button className="ghost" disabled={submitting} onClick={() => setConfirming(false)}>
+              戻る
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

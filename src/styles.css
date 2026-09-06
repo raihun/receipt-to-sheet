@@ -344,3 +344,69 @@ select:focus {
   outline: 2px solid var(--accent);
   outline-offset: -1px;
 }
+
+/* --- 送信直前の確認ダイアログ --- */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  /* 下端から出す。片手持ちで親指が届く位置に操作を寄せるため */
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.sheet {
+  width: 100%;
+  max-width: 640px;
+  max-height: 88vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 16px 16px 0 0;
+}
+
+.sheet-title {
+  margin: 0;
+  font-size: 18px;
+  color: var(--text);
+}
+
+dl.summary {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+dl.summary > div {
+  display: flex;
+  gap: 12px;
+  font-size: 14px;
+}
+
+dl.summary dt {
+  flex: 0 0 56px;
+  color: var(--muted);
+}
+
+dl.summary dd {
+  margin: 0;
+  flex: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+dl.summary dd.wrap {
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
